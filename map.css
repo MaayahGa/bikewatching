@@ -1,5 +1,4 @@
-html,
-body {
+html, body {
   margin: 0;
   padding: 0;
   height: 100%;
@@ -7,8 +6,63 @@ body {
 }
 
 #map {
+  position: relative;
   width: 100%;
   height: 80vh;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+#map svg {
+  position: absolute;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Style the station circles and legend items with color mixing */
+#map svg circle,
+.legend > div {
+  --color-departures: steelblue;
+  --color-arrivals: darkorange;
+  --color: color-mix(
+    in oklch,
+    var(--color-departures) calc(100% * var(--departure-ratio)),
+    var(--color-arrivals)
+  );
+}
+
+#map svg circle {
+  fill: var(--color);
+  fill-opacity: 0.6;
+  stroke: white;
+  stroke-width: 1px;
+  pointer-events: auto; /* Allow tooltips to work */
+}
+
+/* Legend styling */
+.legend {
+  display: flex;
+  gap: 1px;
+  margin-block: 1em;
+}
+
+.legend > div {
+  flex: 1;
+  background: var(--color);
+  padding: 0.75em 2em;
+  text-align: center;
+  color: white;
+  font-weight: 500;
+}
+
+.legend > div:first-child {
+  text-align: left;
+  border-radius: 4px 0 0 4px;
+}
+
+.legend > div:last-child {
+  text-align: right;
+  border-radius: 0 4px 4px 0;
 }
