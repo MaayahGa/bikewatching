@@ -157,7 +157,6 @@ map.on("load", async () => {
   // --- Compute Initial Station Traffic ---
   const stations = computeStationTraffic(jsonData.data.stations);
   console.log("Stations with traffic data:", stations);
-  console.log("Sample station traffic:", stations[0].totalTraffic, "departures:", stations[0].departures, "arrivals:", stations[0].arrivals);
 
   // --- Create Scales ---
   const radiusScale = d3
@@ -169,9 +168,6 @@ map.on("load", async () => {
     .scaleQuantize()
     .domain([0, 1])
     .range([0, 0.5, 1]);
-  
-  // Color interpolator for traffic flow
-  const colorScale = d3.interpolateRgb("darkorange", "steelblue");
 
   // --- Create Circles ---
   const circles = svg
@@ -180,18 +176,15 @@ map.on("load", async () => {
     .enter()
     .append("circle")
     .attr("r", d => radiusScale(d.totalTraffic))
-    .attr("fill", "steelblue")
     .attr("stroke", "white")
     .attr("stroke-width", 1)
     .attr("opacity", 0.6)
     .style('--departure-ratio', (d) => {
-      const ratio = d.totalTraffic > 0 ? stationFlow(d.departures / d.totalTraffic) : 0.5;
-      if (Math.random() < 0.01) { // Log 1% of stations for debugging
-        console.log("Station:", d.name, "Departures:", d.departures, "Total:", d.totalTraffic, "Ratio:", ratio);
-      }
-      return ratio;
+      if (d.totalTraffic === 0) return 0.5;
+      return stationFlow(d.departures / d.totalTraffic);
     })
     .each(function (d) {
+      // Add <title> for browser tooltips
       d3.select(this)
         .append('title')
         .text(`${d.totalTraffic} trips (${d.departures} departures, ${d.arrivals} arrivals)`);
@@ -226,11 +219,15 @@ map.on("load", async () => {
       .data(filteredStations, (d) => d.short_name)
       .join('circle')
       .attr('r', (d) => radiusScale(d.totalTraffic))
-      .style('--departure-ratio', (d) =>
-        stationFlow(d.departures / d.totalTraffic)
-      )
-      .select('title')
-      .text((d) => `${d.totalTraffic} trips (${d.departures} departures, ${d.arrivals} arrivals)`);
+      .style('--departure-ratio', (d) => {
+        if (d.totalTraffic === 0) return 0.5;
+        return stationFlow(d.departures / d.totalTraffic);
+      })
+      .each(function(d) {
+        // Update tooltip on filter change
+        d3.select(this).select('title')
+          .text(`${d.totalTraffic} trips (${d.departures} departures, ${d.arrivals} arrivals)`);
+      });
   }
 
   function updateTimeDisplay() {
